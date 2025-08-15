@@ -17,7 +17,8 @@ export enum LogLevel {
 export interface AppConfig {
   port: number;
   environment: Environment;
-  openaiApiKey: string;
+  openaiApiKey: string; // 可以是真实key或占位符，由App类决定使用哪个服务
+  geminiApiKey: string; // Google Gemini API key
   logLevel: LogLevel;
 }
 
@@ -52,14 +53,12 @@ export function validateConfig(config: {
   port?: number | undefined;
   environment?: Environment | undefined;
   openaiApiKey?: string | undefined;
+  geminiApiKey?: string | undefined;
   logLevel?: LogLevel | undefined;
 }): AppConfig {
   const errors: string[] = [];
 
-  if (!config.openaiApiKey) {
-    errors.push('OPENAI_API_KEY is required');
-  }
-
+  // API keys 现在都是可选的，如果没有提供将使用模拟服务
   if (config.port && (config.port < 1 || config.port > 65535)) {
     errors.push('PORT must be between 1 and 65535');
   }
@@ -71,7 +70,8 @@ export function validateConfig(config: {
   return {
     port: config.port || 3001,
     environment: config.environment || 'development',
-    openaiApiKey: config.openaiApiKey!,
+    openaiApiKey: config.openaiApiKey || 'mock-key',
+    geminiApiKey: config.geminiApiKey || 'mock-key',
     logLevel: config.logLevel || LogLevel.INFO
   };
 }

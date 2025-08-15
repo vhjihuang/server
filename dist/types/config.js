@@ -11,9 +11,6 @@ var LogLevel;
 })(LogLevel || (exports.LogLevel = LogLevel = {}));
 function validateConfig(config) {
     const errors = [];
-    if (!config.openaiApiKey) {
-        errors.push('OPENAI_API_KEY is required');
-    }
     if (config.port && (config.port < 1 || config.port > 65535)) {
         errors.push('PORT must be between 1 and 65535');
     }
@@ -23,7 +20,8 @@ function validateConfig(config) {
     return {
         port: config.port || 3001,
         environment: config.environment || 'development',
-        openaiApiKey: config.openaiApiKey,
+        openaiApiKey: config.openaiApiKey || 'mock-key',
+        geminiApiKey: config.geminiApiKey || 'mock-key',
         logLevel: config.logLevel || LogLevel.INFO
     };
 }

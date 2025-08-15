@@ -18,7 +18,7 @@ class GenerateController {
                     type,
                     style,
                     userAgent: req.headers['user-agent'] || undefined,
-                    ip: req.ip || req.connection.remoteAddress || undefined
+                    ip: req.ip || req.socket?.remoteAddress || undefined
                 };
                 const prompt = prompt_1.PromptService.buildPrompt(description, type, style);
                 const apiResponse = await this.openaiService.generateNaming(prompt, context);

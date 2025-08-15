@@ -9,6 +9,8 @@ import dotenv from 'dotenv';
 // 导入类型和服务
 import { AppConfig, validateConfig } from './types/config';
 import { OpenAIService } from './services/openai';
+import { GeminiService } from './services/gemini';
+import { MockOpenAIService } from './services/mock-openai';
 import { GenerateController } from './controllers/generate';
 import { ValidationService } from './services/validator';
 import { logger } from './services/logger';
@@ -31,13 +33,22 @@ dotenv.config();
 class App {
   private app: express.Application;
   private config: AppConfig;
-  private openaiService: OpenAIService;
+  private openaiService: OpenAIService | GeminiService | MockOpenAIService;
   private generateController: GenerateController;
 
   constructor() {
     this.app = express();
     this.config = this.loadConfig();
-    this.openaiService = new OpenAIService(this.config.openaiApiKey);
+    // 智能选择AI服务：优先使用Gemini，其次OpenAI，最后使用模拟服务
+    if (process.env['USE_MOCK_OPENAI'] === 'true') {
+      this.openaiService = new MockOpenAIService();
+    } else if (this.config.geminiApiKey && this.config.geminiApiKey !== 'your-gemini-api-key-here') {
+      this.openaiService = new GeminiService(this.config.geminiApiKey);
+    } else if (this.config.openaiApiKey && this.config.openaiApiKey !== 'your-openai-api-key-here') {
+      this.openaiService = new OpenAIService(this.config.openaiApiKey);
+    } else {
+      this.openaiService = new MockOpenAIService();
+    }
     this.generateController = new GenerateController(this.openaiService);
     
     this.setupGlobalHandlers();
@@ -58,7 +69,8 @@ class App {
       const config = validateConfig({
         port: process.env['PORT'] ? parseInt(process.env['PORT'], 10) : undefined,
         environment: process.env['NODE_ENV'] as any,
-        openaiApiKey: process.env['OPENAI_API_KEY']!,
+        openaiApiKey: process.env['OPENAI_API_KEY'],
+        geminiApiKey: process.env['GEMINI_API_KEY'],
         logLevel: process.env['LOG_LEVEL'] as any
       });
 

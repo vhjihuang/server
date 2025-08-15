@@ -9,6 +9,7 @@ export interface AppConfig {
     port: number;
     environment: Environment;
     openaiApiKey: string;
+    geminiApiKey: string;
     logLevel: LogLevel;
 }
 export interface OpenAIConfig {
@@ -35,6 +36,7 @@ export declare function validateConfig(config: {
     port?: number | undefined;
     environment?: Environment | undefined;
     openaiApiKey?: string | undefined;
+    geminiApiKey?: string | undefined;
     logLevel?: LogLevel | undefined;
 }): AppConfig;
 //# sourceMappingURL=config.d.ts.map

@@ -27,7 +27,7 @@ export const errorHandler = (
     method: req.method,
     url: req.url,
     userAgent: req.headers['user-agent'],
-    ip: req.ip || req.connection.remoteAddress
+    ip: req.ip || req.socket?.remoteAddress
   };
 
   // 区分操作性错误和程序错误

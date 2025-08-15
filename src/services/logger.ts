@@ -103,6 +103,27 @@ export class LoggerService {
     });
   }
 
+  logGeminiError(error: any, context?: LogContext): void {
+    let errorType = ErrorType.GEMINI_API_ERROR;
+
+    if (error.status === 429) {
+      errorType = ErrorType.RATE_LIMIT_ERROR;
+    } else if (error.status === 403) {
+      errorType = ErrorType.AUTHENTICATION_ERROR;
+    } else if (error.status === 402) {
+      errorType = ErrorType.QUOTA_ERROR;
+    } else if (error.name === "AbortError" || error.code === "ECONNABORTED") {
+      errorType = ErrorType.TIMEOUT_ERROR;
+    } else if (error.code === "ENOTFOUND" || error.code === "ECONNREFUSED") {
+      errorType = ErrorType.NETWORK_ERROR;
+    }
+
+    this.error("Gemini API调用失败", error, {
+      errorType: errorType,
+      ...context,
+    });
+  }
+
   logValidationError(message: string, errors: string[], context?: LogContext): void {
     this.warn(message, {
       errorType: ErrorType.VALIDATION_ERROR,

@@ -6,6 +6,7 @@
 export enum ErrorType {
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   OPENAI_API_ERROR = 'OPENAI_API_ERROR',
+  GEMINI_API_ERROR = 'GEMINI_API_ERROR',
   RESPONSE_PARSING_ERROR = 'RESPONSE_PARSING_ERROR',
   NETWORK_ERROR = 'NETWORK_ERROR',
   AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
@@ -92,6 +93,36 @@ export class ErrorFactory {
     }
 
     return new OpenAIError(message, statusCode, errorType, error);
+  }
+
+  static createGeminiError(error: any): AppError {
+    let message = 'Gemini API调用失败';
+    let statusCode = 500;
+    let errorType = ErrorType.GEMINI_API_ERROR;
+
+    if (error.status === 429) {
+      message = 'API请求频率限制，请稍后重试';
+      statusCode = 429;
+      errorType = ErrorType.RATE_LIMIT_ERROR;
+    } else if (error.status === 403) {
+      message = 'API密钥无效或权限不足';
+      statusCode = 403;
+      errorType = ErrorType.AUTHENTICATION_ERROR;
+    } else if (error.status === 402) {
+      message = 'API配额不足，请稍后重试或联系管理员';
+      statusCode = 402;
+      errorType = ErrorType.QUOTA_ERROR;
+    } else if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+      message = '请求超时，请稍后重试';
+      statusCode = 408;
+      errorType = ErrorType.TIMEOUT_ERROR;
+    } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      message = '网络连接错误，请检查网络连接后重试';
+      statusCode = 503;
+      errorType = ErrorType.NETWORK_ERROR;
+    }
+
+    return new AppError(message, statusCode, errorType);
   }
 
   static createResponseParsingError(error: Error, rawResponse: string = ''): ResponseParsingError {

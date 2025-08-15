@@ -8,6 +8,8 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const config_1 = require("./types/config");
 const openai_1 = require("./services/openai");
+const gemini_1 = require("./services/gemini");
+const mock_openai_1 = require("./services/mock-openai");
 const generate_1 = require("./controllers/generate");
 const validator_1 = require("./services/validator");
 const logger_1 = require("./services/logger");
@@ -18,7 +20,18 @@ class App {
     constructor() {
         this.app = (0, express_1.default)();
         this.config = this.loadConfig();
-        this.openaiService = new openai_1.OpenAIService(this.config.openaiApiKey);
+        if (process.env['USE_MOCK_OPENAI'] === 'true') {
+            this.openaiService = new mock_openai_1.MockOpenAIService();
+        }
+        else if (this.config.geminiApiKey && this.config.geminiApiKey !== 'your-gemini-api-key-here') {
+            this.openaiService = new gemini_1.GeminiService(this.config.geminiApiKey);
+        }
+        else if (this.config.openaiApiKey && this.config.openaiApiKey !== 'your-openai-api-key-here') {
+            this.openaiService = new openai_1.OpenAIService(this.config.openaiApiKey);
+        }
+        else {
+            this.openaiService = new mock_openai_1.MockOpenAIService();
+        }
         this.generateController = new generate_1.GenerateController(this.openaiService);
         this.setupGlobalHandlers();
         this.setupMiddleware();
@@ -32,6 +45,7 @@ class App {
                 port: process.env['PORT'] ? parseInt(process.env['PORT'], 10) : undefined,
                 environment: process.env['NODE_ENV'],
                 openaiApiKey: process.env['OPENAI_API_KEY'],
+                geminiApiKey: process.env['GEMINI_API_KEY'],
                 logLevel: process.env['LOG_LEVEL']
             });
             logger_1.logger.info('配置加载成功', {

@@ -13,7 +13,7 @@ const errorHandler = (err, req, res, next) => {
         method: req.method,
         url: req.url,
         userAgent: req.headers['user-agent'],
-        ip: req.ip || req.connection.remoteAddress
+        ip: req.ip || req.socket?.remoteAddress
     };
     if ((0, errors_1.isOperationalError)(err)) {
         logger_1.logger.warn('操作性错误', {

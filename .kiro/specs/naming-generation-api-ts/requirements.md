@@ -2,7 +2,7 @@
 
 ## 介绍
 
-这是命名生成API的TypeScript重写版本，旨在提供更好的类型安全性、更简洁的代码和更好的开发体验，同时保持与JavaScript版本完全相同的API接口和功能。
+这是命名生成API的TypeScript重写版本，旨在提供更好的类型安全性、更简洁的代码和更好的开发体验，同时支持最新的Google Gemini API结构。系统将使用新的`@google/genai`包和`models.generateContent`方法来实现更现代化的AI集成。
 
 ## 需求
 
@@ -50,7 +50,18 @@
 3. WHEN 编译TypeScript代码 THEN 不应该有类型错误
 4. WHEN 测试类型定义 THEN 类型约束应该正确工作
 
-### 需求 5: 性能和资源优化
+### 需求 5: 新Gemini API集成
+
+**用户故事:** 作为开发者，我希望使用最新的Google Gemini API结构来获得更好的性能和功能支持。
+
+#### 验收标准
+
+1. WHEN 初始化Gemini服务 THEN 系统应该使用`GoogleGenAI`类和新的API结构
+2. WHEN 调用生成接口 THEN 系统应该使用`models.generateContent`方法
+3. WHEN 配置模型参数 THEN 系统应该支持`thinkingConfig`等新配置选项
+4. WHEN 处理API响应 THEN 系统应该正确解析新的响应格式
+
+### 需求 6: 性能和资源优化
 
 **用户故事:** 作为系统管理员，我希望TypeScript版本在性能上不逊色于JavaScript版本。
 

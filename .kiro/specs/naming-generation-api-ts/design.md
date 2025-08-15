@@ -14,7 +14,7 @@ src/
 │   ├── errors.ts   # 错误类型
 │   └── config.ts   # 配置类型
 ├── services/        # 业务逻辑服务
-│   ├── openai.ts   # OpenAI API服务
+│   ├── gemini.ts   # Google Gemini API服务
 │   ├── prompt.ts   # Prompt生成服务
 │   ├── logger.ts   # 日志服务
 │   └── validator.ts # 验证服务
@@ -59,13 +59,20 @@ export interface ErrorResponse {
   requestId: string;
   details?: string[];
 }
+
+// 请求上下文类型
+export interface RequestContext {
+  requestId: string;
+  userId?: string;
+  timestamp?: string;
+}
 ```
 
 #### 错误类型 (types/errors.ts)
 ```typescript
 export enum ErrorType {
   VALIDATION_ERROR = 'VALIDATION_ERROR',
-  OPENAI_API_ERROR = 'OPENAI_API_ERROR',
+  GEMINI_API_ERROR = 'GEMINI_API_ERROR',
   RESPONSE_PARSING_ERROR = 'RESPONSE_PARSING_ERROR',
   NETWORK_ERROR = 'NETWORK_ERROR',
   AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
@@ -91,41 +98,70 @@ export class AppError extends Error {
 
 ### 服务层
 
-#### OpenAI服务 (services/openai.ts)
+#### Gemini服务 (services/gemini.ts)
 ```typescript
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import { AppError, ErrorType } from '../types/errors';
+import { RequestContext } from '../types/api';
 
-export class OpenAIService {
-  private client: OpenAI;
+export class GeminiService {
+  private ai: GoogleGenAI;
 
-  constructor(apiKey: string) {
-    this.client = new OpenAI({ apiKey });
+  constructor(apiKey?: string) {
+    this.ai = new GoogleGenAI({
+      apiKey: apiKey || process.env.GOOGLE_API_KEY
+    });
   }
 
-  async generateNaming(prompt: string): Promise<string> {
+  async generateNaming(prompt: string, context: RequestContext = { requestId: 'unknown' }): Promise<string> {
     try {
-      const response = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 150,
-        temperature: 0.7,
-        timeout: 30000
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 0, // 禁用思考模式以获得更快响应
+          },
+          temperature: 0.7,
+          maxOutputTokens: 150,
+        }
       });
 
-      return response.choices[0].message.content?.trim() || '';
+      const content = response.text?.trim();
+      if (!content) {
+        throw new AppError('Gemini API返回空响应', 500, ErrorType.GEMINI_API_ERROR);
+      }
+
+      return content;
     } catch (error: any) {
-      throw this.handleOpenAIError(error);
+      throw this.handleGeminiError(error);
     }
   }
 
-  private handleOpenAIError(error: any): AppError {
-    // 错误处理逻辑，比JavaScript版本更简洁
-    if (error.code === 'insufficient_quota') {
-      return new AppError('API配额不足', 402, ErrorType.QUOTA_ERROR);
+  private handleGeminiError(error: any): AppError {
+    // 错误处理逻辑，针对Gemini API
+    if (error.status === 429) {
+      return new AppError('API请求频率限制', 429, ErrorType.RATE_LIMIT_ERROR);
     }
-    // ... 其他错误处理
-    return new AppError('OpenAI API调用失败', 500, ErrorType.OPENAI_API_ERROR);
+    if (error.status === 403) {
+      return new AppError('API密钥无效或权限不足', 403, ErrorType.AUTHENTICATION_ERROR);
+    }
+    return new AppError('Gemini API调用失败', 500, ErrorType.GEMINI_API_ERROR);
+  }
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: "test",
+        config: {
+          thinkingConfig: { thinkingBudget: 0 }
+        }
+      });
+      return !!response.text;
+    } catch (error) {
+      return false;
+    }
   }
 }
 ```

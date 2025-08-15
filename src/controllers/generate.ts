@@ -5,15 +5,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { GenerateRequest, GenerateResponse, RequestContext } from '../types/api';
 import { OpenAIService } from '../services/openai';
+import { GeminiService } from '../services/gemini';
+import { MockOpenAIService } from '../services/mock-openai';
 import { PromptService } from '../services/prompt';
 import { ValidationService } from '../services/validator';
 import { ErrorFactory } from '../types/errors';
 import { logger } from '../services/logger';
 
 export class GenerateController {
-  private openaiService: OpenAIService;
+  private openaiService: OpenAIService | GeminiService | MockOpenAIService;
 
-  constructor(openaiService: OpenAIService) {
+  constructor(openaiService: OpenAIService | GeminiService | MockOpenAIService) {
     this.openaiService = openaiService;
   }
 
@@ -34,7 +36,7 @@ export class GenerateController {
         type,
         style,
         userAgent: req.headers['user-agent'] || undefined,
-        ip: req.ip || req.connection.remoteAddress || undefined
+        ip: req.ip || req.socket?.remoteAddress || undefined
       };
 
       // 构建智能prompt

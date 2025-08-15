@@ -49,9 +49,6 @@ class ValidationService {
     }
     static validateEnvironment() {
         const errors = [];
-        if (!process.env['OPENAI_API_KEY']) {
-            errors.push('OPENAI_API_KEY 环境变量未设置');
-        }
         const port = process.env['PORT'];
         if (port && (isNaN(Number(port)) || Number(port) < 1 || Number(port) > 65535)) {
             errors.push('PORT 必须是1-65535之间的数字');
