@@ -7,20 +7,26 @@ import { ErrorFactory, AppError, ErrorType } from "../types/errors";
 import { RequestContext } from "../types/api";
 import { logger } from "./logger";
 import { MockGeminiService } from "./mock-gemini";
+import { SmartNamingService } from "./smart-naming";
 
 export class GeminiService {
   private ai?: GoogleGenAI;
   private mockService?: MockGeminiService;
-  private useMock: boolean;
+  private localService?: SmartNamingService;
+  private mode: "real" | "mock" | "local";
 
   constructor(apiKey?: string) {
-    // 检查是否使用模拟服务
-    this.useMock = process.env["USE_MOCK_GEMINI"] === "true";
-
-    if (this.useMock) {
+    // 检查使用哪种模式
+    if (process.env["USE_LOCAL_NAMING"] === "true") {
+      this.mode = "local";
+      logger.info("使用本地命名生成服务");
+      this.localService = new SmartNamingService();
+    } else if (process.env["USE_MOCK_GEMINI"] === "true") {
+      this.mode = "mock";
       logger.info("使用Mock Gemini服务");
       this.mockService = new MockGeminiService(apiKey);
     } else {
+      this.mode = "real";
       // 如果提供了apiKey参数，使用它；否则GoogleGenAI会自动从环境变量GEMINI_API_KEY读取
       if (apiKey) {
         this.ai = new GoogleGenAI({
@@ -37,8 +43,12 @@ export class GeminiService {
    * 调用Gemini API生成命名建议
    */
   async generateNaming(prompt: string, context: RequestContext = { requestId: "unknown" }): Promise<string> {
-    // 如果使用模拟服务
-    if (this.useMock && this.mockService) {
+    // 根据模式选择服务
+    if (this.mode === "local" && this.localService) {
+      return await this.localService.generateNaming(prompt, context);
+    }
+
+    if (this.mode === "mock" && this.mockService) {
       return await this.mockService.generateNaming(prompt, context);
     }
 
@@ -98,8 +108,12 @@ export class GeminiService {
    * 健康检查 - 验证API密钥是否有效
    */
   async healthCheck(): Promise<boolean> {
-    // 如果使用模拟服务，总是返回true
-    if (this.useMock) {
+    // 根据模式进行健康检查
+    if (this.mode === "local" && this.localService) {
+      return await this.localService.healthCheck();
+    }
+
+    if (this.mode === "mock") {
       return true;
     }
 

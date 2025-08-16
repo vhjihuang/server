@@ -43,7 +43,8 @@ class App {
     if (process.env['USE_MOCK_OPENAI'] === 'true') {
       this.openaiService = new MockOpenAIService();
     } else if (this.config.geminiApiKey && this.config.geminiApiKey !== 'your-gemini-api-key-here') {
-      this.openaiService = new GeminiService(this.config.geminiApiKey);
+      // this.openaiService = new GeminiService(this.config.geminiApiKey);
+      this.openaiService = new GeminiService();
     } else if (this.config.openaiApiKey && this.config.openaiApiKey !== 'your-openai-api-key-here') {
       this.openaiService = new OpenAIService(this.config.openaiApiKey);
     } else {

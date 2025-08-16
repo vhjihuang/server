@@ -130,7 +130,11 @@ export class MockGeminiService {
     } catch (error: any) {
       const duration = Date.now() - startTime;
 
-      logger.error("Mock Gemini API调用失败", error);
+      logger.error("Mock Gemini API调用失败", error, {
+        duration,
+        promptLength: prompt.length,
+        ...context,
+      });
 
       // 添加默认返回值以满足 TypeScript 类型检查
       return JSON.stringify([]);

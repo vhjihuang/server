@@ -39,7 +39,7 @@ export const validateGenerateRequest = (req: Request, _res: Response, next: Next
     });
 
     // 使用验证服务验证请求
-    req.validatedBody = ValidationService.validateGenerateRequest(req.body);
+    req.validatedBody = ValidationService.validateRequest(req.body);
 
     logger.debug("请求参数验证通过", {
       requestId: req.requestId,
