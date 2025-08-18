@@ -26,13 +26,21 @@
     "@google/genai": "^1.14.0",
     "@types/lodash": "^4.17.20",
     "@types/natural": "^5.1.5",
+    "change-case": "^5.4.4",
     "compromise": "^14.14.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "franc-min": "^6.2.0",
+    "leetspeak": "^0.0.1",
     "lodash": "^4.17.21",
     "natural": "^8.1.0",
-    "openai": "^4.20.1"
+    "node-nlp": "^5.0.0-alpha.5",
+    "openai": "^4.20.1",
+    "pluralize": "^8.0.0",
+    "stemmer": "^2.0.1",
+    "wink-eng-lite-web-model": "^1.8.1",
+    "wink-nlp": "^2.4.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.15",

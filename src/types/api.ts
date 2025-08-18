@@ -3,7 +3,7 @@
  */
 
 // 命名类型枚举
-export const NAMING_TYPES = ['function', 'variable', 'class', 'boolean', 'constant'] as const;
+export const NAMING_TYPES = ['function', 'variable', 'class', 'boolean', 'constant', 'component', 'hook', 'state', 'prop', 'file', 'folder', 'enum', 'interface'] as const;
 export type NamingType = typeof NAMING_TYPES[number];
 
 // 命名风格枚举
@@ -51,6 +51,16 @@ export interface RequestContext {
   [key: string]: any;
 }
 
+// 项目上下文接口
+export interface ProjectContext {
+  filePath?: string;
+  siblingFiles?: string[];
+  moduleName?: string;
+  projectType?: string;
+  existingNames?: string[];
+  techStack?: string[];
+}
+
 // 日志上下文接口（更宽松的类型）
 export interface LogContext {
   requestId?: string;
@@ -76,4 +86,26 @@ export function isValidDescription(value: any): value is string {
   return typeof value === 'string' && 
          value.trim().length > 0 && 
          value.length <= 500;
+}
+
+export const FRONTEND_NAMING_TYPES = [
+  'function',
+  'variable',
+  'class',
+  'component',
+  'hook',
+  'type',
+  'interface',
+  'enum'
+] as const;
+
+export type FrontendNamingType = typeof FRONTEND_NAMING_TYPES[number];
+
+
+export interface LocalNamingOptions {
+  style: NamingStyle;
+  context?: {
+    variables?: string[];
+    fileType?: 'ts' | 'js' | 'jsx' | 'tsx';
+  };
 }

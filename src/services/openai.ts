@@ -11,7 +11,7 @@ export class OpenAIService {
   private client: OpenAI;
 
   constructor(apiKey: string) {
-    this.client = new OpenAI({ apiKey });
+    this.client = new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey });
   }
 
   /**
@@ -24,13 +24,13 @@ export class OpenAIService {
       promptLength: prompt.length,
       ...context
     });
-
+    console.log('开始调用OpenAI......');
     try {
       const response = await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "deepseek-chat",
         messages: [
           {
-            role: "user",
+            role: "system",
             content: prompt
           }
         ],
@@ -49,7 +49,7 @@ export class OpenAIService {
         tokensUsed: response.usage?.total_tokens,
         ...context
       });
-
+      console.log('OpenAI API响应成功:', response.choices[0]?.message?.content);
       return responseContent;
     } catch (error: any) {
       const duration = Date.now() - startTime;
@@ -70,7 +70,7 @@ export class OpenAIService {
   async healthCheck(): Promise<boolean> {
     try {
       await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "deepseek-chat",
         messages: [{ role: "user", content: "test" }],
         max_tokens: 1
       });

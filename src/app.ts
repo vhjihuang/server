@@ -11,6 +11,7 @@ import { AppConfig, validateConfig } from './types/config';
 import { OpenAIService } from './services/openai';
 import { GeminiService } from './services/gemini';
 import { MockOpenAIService } from './services/mock-openai';
+import { SmartNamingService } from './services/smart-naming';
 import { GenerateController } from './controllers/generate';
 import { ValidationService } from './services/validator';
 import { logger } from './services/logger';
@@ -33,24 +34,37 @@ dotenv.config();
 class App {
   private app: express.Application;
   private config: AppConfig;
-  private openaiService: OpenAIService | GeminiService | MockOpenAIService;
+  private aiService: OpenAIService | GeminiService | MockOpenAIService; 
+  private smartNamingService: SmartNamingService;
   private generateController: GenerateController;
 
   constructor() {
     this.app = express();
     this.config = this.loadConfig();
-    // 智能选择AI服务：优先使用Gemini，其次OpenAI，最后使用模拟服务
-    if (process.env['USE_MOCK_OPENAI'] === 'true') {
-      this.openaiService = new MockOpenAIService();
+    
+    // 初始化 SmartNamingService
+    this.smartNamingService = new SmartNamingService(process.cwd());
+    
+    // 智能选择AI服务：优先本地，然后Gemini，然后OpenAI，最后模拟服务
+    if (process.env['USE_LOCAL_NAMING'] === 'true') { // 首先检查是否使用本地命名服务
+      this.aiService = new MockOpenAIService(); // 当使用本地服务时，仍然需要一个备用的远程AI服务
+      logger.info('使用本地命名服务 (SmartNamingService) 和模拟OpenAI服务作为备用');
+    } else if (process.env['USE_MOCK_OPENAI'] === 'true') {
+      this.aiService = new MockOpenAIService();
+      logger.info('使用模拟OpenAI服务');
     } else if (this.config.geminiApiKey && this.config.geminiApiKey !== 'your-gemini-api-key-here') {
-      // this.openaiService = new GeminiService(this.config.geminiApiKey);
-      this.openaiService = new GeminiService();
+      this.aiService = new GeminiService(); // 实例化 GeminiService
+      logger.info('使用Gemini API服务');
     } else if (this.config.openaiApiKey && this.config.openaiApiKey !== 'your-openai-api-key-here') {
-      this.openaiService = new OpenAIService(this.config.openaiApiKey);
+      this.aiService = new OpenAIService(this.config.openaiApiKey); // 实例化 OpenAI Service
+      logger.info('使用OpenAI API服务');
     } else {
-      this.openaiService = new MockOpenAIService();
+      this.aiService = new MockOpenAIService();
+      logger.warn('未检测到有效API密钥，回退到模拟OpenAI服务');
     }
-    this.generateController = new GenerateController(this.openaiService);
+    
+    // 将选择的 AI 服务和 SmartNamingService 传递给 GenerateController
+    this.generateController = new GenerateController(this.aiService, this.smartNamingService);
     
     this.setupGlobalHandlers();
     this.setupMiddleware();
