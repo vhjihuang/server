@@ -36,7 +36,6 @@ export class LocalNamingEngine {
         type,
         style: options.style
       });
-      logger.debug('生成建议', { suggestions });
       return {
         suggestions,
         confidence: Math.min(0.9, baseTerms.length * 0.3) // 简单置信度计算

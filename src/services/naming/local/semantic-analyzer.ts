@@ -13,27 +13,32 @@ export class SemanticAnalyzer {
     actionTerms: string[];
   }> {
     try {
-      logger.info("开始语义分析", { text });
+      // logger.info("开始语义分析", { text });
 
       const doc = nlp.readDoc(text || "");
 
+      // 获取所有tokens和词性标记（忽略类型检查）
+      // @ts-ignore
+      const posTags: string[] = doc.tokens().out(its.pos);
+      // @ts-ignore
+      const tokens: string[] = doc.tokens().out();
+
       const nounItems: string[] = [];
       const verbItems: string[] = [];
-      
-      // 使用 out() 方法获取 tokens 数组，然后遍历
-      const tokens = doc.tokens().out();
-      tokens.forEach((token: any) => {
-        // 根据类型定义，应该使用 token.its.pos() 获取词性
-        if (token.its.pos() === "NOUN") {
-          // 使用 token.text() 获取文本
-          nounItems.push(token.text());
-        } else if (token.its.pos() === "VERB") {
-          // 使用 token.text() 获取文本
-          verbItems.push(token.text());
-        }
-      });
 
-      logger.info("分析结果", { nouns: nounItems, verbs: verbItems });
+      // 遍历tokens和词性标记
+      for (let i = 0; i < posTags.length; i++) {
+        const pos = posTags[i];
+        const tokenValue = tokens[i];
+        
+        if (pos === "NOUN") {
+          nounItems.push(tokenValue);
+        } else if (pos === "VERB") {
+          verbItems.push(tokenValue);
+        }
+      }
+
+      // logger.info("分析结果", { nouns: nounItems, verbs: verbItems });
 
       return {
         baseTerms: nounItems.map((term: string) => stemmer(term.toLowerCase())),
